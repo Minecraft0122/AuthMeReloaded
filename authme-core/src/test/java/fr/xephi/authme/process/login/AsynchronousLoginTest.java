@@ -283,7 +283,7 @@ class AsynchronousLoginTest {
         given(passwordSecurity.comparePassword("hunter2", auth.getPassword(), "bobby")).willReturn(true);
         given(limboService.getLimboPlayer(player)).willReturn(limboPlayer);
         given(commonService.getProperty(RegistrationSettings.USE_DIALOG_UI)).willReturn(true);
-        given(dialogAdapter.isDialogSupported()).willReturn(true);
+        given(dialogAdapter.isDialogSupported(player)).willReturn(true);
         given(player.isOnline()).willReturn(true);
         given(dialogWindowService.createTotpDialog(player)).willReturn(createDialogSpec("2FA", "Verify"));
         doAnswer(invocation -> {
@@ -298,6 +298,35 @@ class AsynchronousLoginTest {
         verify(limboService).resetMessageTask(player, LimboMessageType.TOTP_CODE);
         verify(limboPlayer).setState(LimboPlayerState.TOTP_REQUIRED);
         verify(dialogAdapter).showTotpDialog(eq(player), any(DialogWindowSpec.class));
+        verify(asynchronousLogin, never()).performLogin(player, auth);
+    }
+
+    @Test
+    void shouldKeepTotpRequiredForLegacyClientWithoutOpeningDialog() {
+        // given
+        Player player = mockPlayer("bobby");
+        TestHelper.mockIpAddressToPlayer(player, "203.0.113.5");
+        PlayerAuth auth = PlayerAuth.builder().name("bobby").totpKey("secret").build();
+        LimboPlayer limboPlayer = mock(LimboPlayer.class);
+        given(playerCache.isAuthenticated("bobby")).willReturn(false, false);
+        given(dataSource.getAuth("bobby")).willReturn(auth);
+        given(commonService.getProperty(DatabaseSettings.MYSQL_COL_GROUP)).willReturn("");
+        given(commonService.getProperty(RestrictionSettings.MAX_LOGIN_PER_IP)).willReturn(0);
+        given(commonService.getProperty(PluginSettings.USE_ASYNC_TASKS)).willReturn(false);
+        given(loginCaptchaManager.isCaptchaRequired("bobby")).willReturn(false);
+        given(passwordSecurity.comparePassword("hunter2", auth.getPassword(), "bobby")).willReturn(true);
+        given(limboService.getLimboPlayer(player)).willReturn(limboPlayer);
+        given(commonService.getProperty(RegistrationSettings.USE_DIALOG_UI)).willReturn(true);
+        given(dialogAdapter.isDialogSupported(player)).willReturn(false);
+
+
+        // when
+        asynchronousLogin.login(player, "hunter2");
+
+        // then
+        verify(limboService).resetMessageTask(player, LimboMessageType.TOTP_CODE);
+        verify(limboPlayer).setState(LimboPlayerState.TOTP_REQUIRED);
+        verify(dialogAdapter, never()).showTotpDialog(eq(player), any(DialogWindowSpec.class));
         verify(asynchronousLogin, never()).performLogin(player, auth);
     }
 

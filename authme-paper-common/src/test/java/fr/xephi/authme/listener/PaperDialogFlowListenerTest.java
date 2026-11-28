@@ -34,6 +34,7 @@ import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.event.connection.configuration.AsyncPlayerConnectionConfigureEvent;
 import io.papermc.paper.event.player.PlayerCustomClickEvent;
 import fr.xephi.authme.platform.PaperDialogHelper;
+import fr.xephi.authme.platform.PaperClientCapabilities;
 import net.kyori.adventure.audience.Audience;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -70,6 +71,31 @@ import static org.mockito.Mockito.verifyNoInteractions;
 public class PaperDialogFlowListenerTest {
 
     private static final long SESSION_ID = 42L;
+
+    @Test
+    public void shouldLetLegacyClientJoinWithoutApprovingLoginOrOpeningBlockingSession() throws Exception {
+        PaperDialogFlowListener listener = new PaperDialogFlowListener();
+        CommonService common = mock(CommonService.class);
+        PreJoinDialogService sessions = mock(PreJoinDialogService.class);
+        PaperClientCapabilities capabilities = mock(PaperClientCapabilities.class);
+        DataSource dataSource = mock(DataSource.class);
+        setField(listener, "commonService", common);
+        setField(listener, "preJoinDialogService", sessions);
+        setField(listener, "clientCapabilities", capabilities);
+        setField(listener, "dataSource", dataSource);
+        given(common.getProperty(RegistrationSettings.USE_PREJOIN_DIALOG_UI)).willReturn(true);
+        PlayerConfigurationConnection connection = mockConnection("LegacyPlayer");
+        given(connection.getProfile().getId()).willReturn(UUID.randomUUID());
+        given(capabilities.supportsDialogs(connection)).willReturn(false);
+        AsyncPlayerConnectionConfigureEvent event = mock(AsyncPlayerConnectionConfigureEvent.class);
+        given(event.getConnection()).willReturn(connection);
+
+        listener.onPlayerConfigure(event);
+
+        verify(capabilities).supportsDialogs(connection);
+        verifyNoInteractions(sessions, dataSource);
+        verify(connection, never()).getAudience();
+    }
 
     @Test
     public void shouldListenLateOnPlayerConfigure() throws Exception {
@@ -367,6 +393,9 @@ public class PaperDialogFlowListenerTest {
         AsyncPlayerConnectionConfigureEvent event = mock(AsyncPlayerConnectionConfigureEvent.class);
         given(event.getConnection()).willReturn(connection);
 
+        PaperClientCapabilities capabilities = mock(PaperClientCapabilities.class);
+        given(capabilities.supportsDialogs(connection)).willReturn(true);
+        setField(listener, "clientCapabilities", capabilities);
         listener.onPlayerConfigure(event);
 
         verify(preJoinDialogService, never()).openSession(anyString());
@@ -408,6 +437,9 @@ public class PaperDialogFlowListenerTest {
         AsyncPlayerConnectionConfigureEvent event = mock(AsyncPlayerConnectionConfigureEvent.class);
         given(event.getConnection()).willReturn(connection);
 
+        PaperClientCapabilities capabilities = mock(PaperClientCapabilities.class);
+        given(capabilities.supportsDialogs(connection)).willReturn(true);
+        setField(listener, "clientCapabilities", capabilities);
         listener.onPlayerConfigure(event);
 
         verify(preJoinDialogService, never()).openSession(anyString());
@@ -448,6 +480,9 @@ public class PaperDialogFlowListenerTest {
         AsyncPlayerConnectionConfigureEvent event = mock(AsyncPlayerConnectionConfigureEvent.class);
         given(event.getConnection()).willReturn(connection);
 
+        PaperClientCapabilities capabilities = mock(PaperClientCapabilities.class);
+        given(capabilities.supportsDialogs(connection)).willReturn(true);
+        setField(listener, "clientCapabilities", capabilities);
         listener.onPlayerConfigure(event);
 
         verify(preJoinDialogService, never()).openSession(anyString());
@@ -504,6 +539,9 @@ public class PaperDialogFlowListenerTest {
         AsyncPlayerConnectionConfigureEvent event = mock(AsyncPlayerConnectionConfigureEvent.class);
         given(event.getConnection()).willReturn(connection);
 
+        PaperClientCapabilities capabilities = mock(PaperClientCapabilities.class);
+        given(capabilities.supportsDialogs(connection)).willReturn(true);
+        setField(listener, "clientCapabilities", capabilities);
         listener.onPlayerConfigure(event);
 
         verify(preJoinDialogService).markSkipPostJoinDialog(SESSION_ID);
@@ -640,8 +678,9 @@ public class PaperDialogFlowListenerTest {
         setField(listener, "proxySessionManager", mock(ProxySessionManager.class));
 
         try (var bukkit = mockStatic(Bukkit.class)) {
-            listener.onPlayerConnectionClose(new PlayerConnectionCloseEvent(
-                UUID.randomUUID(), "Bobby", InetAddress.getLoopbackAddress(), false));
+            PlayerConnectionCloseEvent closed = mock(PlayerConnectionCloseEvent.class);
+            given(closed.getPlayerName()).willReturn("Bobby");
+            listener.onPlayerConnectionClose(closed);
         }
 
         verify(preJoinDialogService).retireSession(SESSION_ID);
@@ -660,8 +699,9 @@ public class PaperDialogFlowListenerTest {
         setField(listener, "proxySessionManager", proxySessionManager);
 
         try (var bukkit = mockStatic(Bukkit.class)) {
-            listener.onPlayerConnectionClose(new PlayerConnectionCloseEvent(
-                UUID.randomUUID(), "Bobby", InetAddress.getLoopbackAddress(), false));
+            PlayerConnectionCloseEvent closed = mock(PlayerConnectionCloseEvent.class);
+            given(closed.getPlayerName()).willReturn("Bobby");
+            listener.onPlayerConnectionClose(closed);
         }
 
         verify(proxySessionManager).removeLoginRequest("Bobby");
@@ -675,8 +715,9 @@ public class PaperDialogFlowListenerTest {
 
         try (var bukkit = mockStatic(Bukkit.class)) {
             bukkit.when(() -> Bukkit.getPlayerExact("Bobby")).thenReturn(mock(Player.class));
-            listener.onPlayerConnectionClose(new PlayerConnectionCloseEvent(
-                UUID.randomUUID(), "Bobby", InetAddress.getLoopbackAddress(), false));
+            PlayerConnectionCloseEvent closed = mock(PlayerConnectionCloseEvent.class);
+            given(closed.getPlayerName()).willReturn("Bobby");
+            listener.onPlayerConnectionClose(closed);
         }
 
         verify(proxySessionManager, never()).removeLoginRequest(anyString());

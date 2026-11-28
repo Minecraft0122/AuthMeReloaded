@@ -77,6 +77,11 @@ public abstract class AbstractPaperPlatformAdapter extends AbstractSpigotPlatfor
     }
 
     @Override
+    public boolean isDialogSupported(Player player) {
+        return DIALOG_AVAILABLE && new PaperClientCapabilities().supportsDialogs(player);
+    }
+
+    @Override
     public void showLoginDialog(Player player, DialogWindowSpec dialog) {
         PaperDialogHelper.showLoginDialog(player, dialog);
     }

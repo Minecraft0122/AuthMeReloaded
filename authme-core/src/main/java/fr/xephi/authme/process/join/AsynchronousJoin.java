@@ -336,7 +336,7 @@ public class AsynchronousJoin implements AsynchronousProcess {
             if (!shouldSkipPostJoinDialog
                 && !playerCache.isAuthenticated(player.getName())
                 && service.getProperty(RegistrationSettings.USE_DIALOG_UI)
-                && dialogAdapter.isDialogSupported()) {
+                && dialogAdapter.isDialogSupported(player)) {
                 bukkitService.runTaskLater(player, () -> showPostJoinDialogIfNecessary(player, isAuthAvailable), 1L);
             }
         });
@@ -346,7 +346,7 @@ public class AsynchronousJoin implements AsynchronousProcess {
         if (!player.isOnline()
             || playerCache.isAuthenticated(player.getName())
             || !service.getProperty(RegistrationSettings.USE_DIALOG_UI)
-            || !dialogAdapter.isDialogSupported()) {
+            || !dialogAdapter.isDialogSupported(player)) {
             return;
         }
 

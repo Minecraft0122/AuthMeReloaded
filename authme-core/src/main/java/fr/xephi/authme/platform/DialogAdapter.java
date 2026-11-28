@@ -19,6 +19,11 @@ public interface DialogAdapter {
         return false;
     }
 
+    /** Returns whether both the platform and this player's client support dialogs. */
+    default boolean isDialogSupported(Player player) {
+        return isDialogSupported();
+    }
+
     /**
      * Shows the login dialog to the given player.
      *

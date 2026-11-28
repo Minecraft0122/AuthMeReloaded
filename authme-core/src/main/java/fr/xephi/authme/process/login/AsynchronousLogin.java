@@ -283,7 +283,7 @@ public class AsynchronousLogin implements AsynchronousProcess {
     private void showTotpDialogIfEnabled(Player player) {
         boolean dialogEnabled = service.getProperty(RegistrationSettings.USE_DIALOG_UI)
             || service.getProperty(RegistrationSettings.USE_PREJOIN_DIALOG_UI);
-        if (!dialogEnabled || !dialogAdapter.isDialogSupported()) {
+        if (!dialogEnabled || !dialogAdapter.isDialogSupported(player)) {
             return;
         }
 

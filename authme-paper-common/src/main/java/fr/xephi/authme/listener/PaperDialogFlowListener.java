@@ -13,6 +13,7 @@ import fr.xephi.authme.message.Messages;
 import fr.xephi.authme.platform.DialogWindowSpec;
 import fr.xephi.authme.platform.PaperDialogActionKeys;
 import fr.xephi.authme.platform.PaperDialogHelper;
+import fr.xephi.authme.platform.PaperClientCapabilities;
 import fr.xephi.authme.process.register.RegisterSecondaryArgument;
 import fr.xephi.authme.process.register.RegistrationType;
 import fr.xephi.authme.security.PasswordSecurity;
@@ -105,6 +106,9 @@ public class PaperDialogFlowListener implements Listener {
     @Inject
     private BukkitService bukkitService;
 
+    @Inject
+    private PaperClientCapabilities clientCapabilities;
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerConfigure(AsyncPlayerConnectionConfigureEvent event) {
         if (!commonService.getProperty(RegistrationSettings.USE_PREJOIN_DIALOG_UI)) {
@@ -120,6 +124,12 @@ public class PaperDialogFlowListener implements Listener {
         }
 
         retireSession(connection);
+
+        if (!clientCapabilities.supportsDialogs(connection)) {
+            // Let the normal join pipeline create protected limbo and require commands.
+            // Do not create a pre-join session, approve authentication, or wait for a response.
+            return;
+        }
 
         String normalizedName = playerName.toLowerCase(Locale.ROOT);
         Set<String> unrestrictedNames = commonService.getProperty(RestrictionSettings.UNRESTRICTED_NAMES);

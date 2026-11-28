@@ -106,6 +106,7 @@
         <dependencies.velocity.version>3.4.0</dependencies.velocity.version>
         <dependencies.bungeecord.version>1.21-R0.4</dependencies.bungeecord.version>
         <dependencies.packetevents.version>2.12.1</dependencies.packetevents.version>
+        <dependencies.paper.version>1.21.11-R0.1-SNAPSHOT</dependencies.paper.version>
         <!-- Spigot -->
         <dependencies.spigot.version>1.16.5-R0.1-SNAPSHOT</dependencies.spigot.version>
         <dependencies.log4j-core.version>2.25.4</dependencies.log4j-core.version> <!-- version bundled 1.16.5 -->
@@ -381,6 +382,10 @@
     </build>
 
     <repositories>
+        <repository>
+            <id>viaversion</id>
+            <url>https://repo.viaversion.com</url>
+        </repository>
         <!-- Apache snapshots repo -->
         <repository>
             <id>apache-snapshots</id>
@@ -863,7 +868,7 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21.11-R0.1-SNAPSHOT</version>
+            <version>${dependencies.paper.version}</version>
             <scope>provided</scope>
         </dependency>
 

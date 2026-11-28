@@ -131,7 +131,7 @@ public class AsynchronousJoinTest {
         setUpRegisteredJoin(player);
         given(playerCache.isAuthenticated("Bobby")).willReturn(false);
         given(service.getProperty(RegistrationSettings.USE_DIALOG_UI)).willReturn(true);
-        given(dialogAdapter.isDialogSupported()).willReturn(true);
+        given(dialogAdapter.isDialogSupported(player)).willReturn(true);
         given(dialogWindowService.createLoginDialog(player)).willReturn(createDialogSpec("Login", "Login"));
 
         // when
@@ -141,6 +141,22 @@ public class AsynchronousJoinTest {
         verify(limboService).createLimboPlayer(player, true);
         verify(bukkitService).runTaskLater(eq(player), any(Runnable.class), eq(1L));
         verify(dialogAdapter).showLoginDialog(eq(player), any(DialogWindowSpec.class));
+    }
+
+    @Test
+    public void shouldKeepLegacyClientInProtectedLimboWithoutOpeningDialog() {
+        Player player = mockPlayer("Bobby");
+        setUpRegisteredJoin(player);
+        given(playerCache.isAuthenticated("Bobby")).willReturn(false);
+        given(service.getProperty(RegistrationSettings.USE_DIALOG_UI)).willReturn(true);
+        given(dialogAdapter.isDialogSupported(player)).willReturn(false);
+
+        asynchronousJoin.processJoin(player);
+
+        verify(limboService).createLimboPlayer(player, true);
+        verify(dialogAdapter, never()).showLoginDialog(eq(player), any());
+        verify(dialogStateService, never()).markDialogOpen(player);
+        verify(asynchronousLogin, never()).forceLogin(player);
     }
 
     @Test
@@ -171,7 +187,7 @@ public class AsynchronousJoinTest {
         given(player.isOnline()).willReturn(true);
         given(playerCache.isAuthenticated("Bobby")).willReturn(false, false, true);
         given(service.getProperty(RegistrationSettings.USE_DIALOG_UI)).willReturn(true);
-        given(dialogAdapter.isDialogSupported()).willReturn(true);
+        given(dialogAdapter.isDialogSupported(player)).willReturn(true);
         given(dialogWindowService.createLoginDialog(player)).willReturn(createDialogSpec("Login", "Login"));
 
         AtomicReference<Runnable> delayedTask = new AtomicReference<>();
@@ -373,7 +389,7 @@ public class AsynchronousJoinTest {
             null, null, null, true, false, null));
         given(playerCache.isAuthenticated("Bobby")).willReturn(false);
         given(service.getProperty(RegistrationSettings.USE_DIALOG_UI)).willReturn(true);
-        given(dialogAdapter.isDialogSupported()).willReturn(true);
+        given(dialogAdapter.isDialogSupported(player)).willReturn(true);
 
         // when
         asynchronousJoin.processJoin(player);

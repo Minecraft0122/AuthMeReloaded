@@ -184,8 +184,8 @@ public class PaperLoginValidationListenerTest {
 
     @Test
     public void shouldReleaseStaleClaimOnConnectionClose() {
-        PlayerConnectionCloseEvent event = new PlayerConnectionCloseEvent(
-            UUID.randomUUID(), "Bobby", InetAddress.getLoopbackAddress(), false);
+        PlayerConnectionCloseEvent event = mock(PlayerConnectionCloseEvent.class);
+        given(event.getPlayerName()).willReturn("Bobby");
 
         listener.onPlayerConnectionClose(event);
 
